@@ -1,0 +1,23 @@
+{
+  "name": "chess-ai",
+  "version": "1.0.0",
+  "description": "AI that plays chess.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dannyh2021/Chess-AI.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/dannyh2021/Chess-AI/issues"
+  },
+  "homepage": "https://github.com/dannyh2021/Chess-AI#readme",
+  "dependencies": {
+    "chess.js": "^0.12.0",
+    "express": "^4.17.2"
+  }
+}
