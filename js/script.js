@@ -1,60 +1,11 @@
+// notes
+// board - array of length-8 arrays each containing 8 piece = {"type", "color"} objects or null
+
 // board defaults to the starting position when called with no parameters
-var board, game = new Chess();
+var board;
+var game = new Chess();
 var $status = $('#status')
 
-// AI Part
-var minimaxRoot = function(depth, game, isMaximisingPlayer) {
-    var newGameMoves = game.ugly_moves();
-    var bestMove = -9999;
-    var bestMoveFound;
-
-    for(var i = 0; i < newGameMoves.length; i++) {
-        var newGameMove = newGameMoves[i];
-        game.ugly_move(newGameMove);
-        var val = minimax(depth - 1, game, -10000, 10000, !isMaximisingPlayer);
-        game.undo();
-        if(value >= bestMove) {
-            bestMove = value;
-            bestMoveFound = newGameMove;
-        }
-    }
-    return bestMoveFound
-}
-
-var minimax = function(depth, game, alpha, beta, isMaximisingPlayer) {
-    positionCount++;
-    if (depth === 0) {
-        return -evaluateBoard(game.board());
-    }
-
-    var newGameMoves = game.ugly_moves();
-
-    if (isMaximisingPlayer) {
-        var bestMove = -9999;
-        for (var i = 0; i < newGameMoves.length; i++) {
-            game.ugly_moves(newGameMoves[i]);
-            bestMove = Math.max(bestMove, minimax(depth - 1, game, alpha, beta, !isMaximisingPlayer));
-            game.undo();
-            alpha = Math.max(alpha, bestMove);
-            if (beta <= alpha) {
-                return bestMove;
-            }
-        }
-        return bestMove;
-    } else {
-        var bestMove = 9999;
-        for (var i = 0; i < newGameMoves.length; i++) {
-            game.ugly_move(newGameMoves[i]);
-            bestMove = Math.min(bestMove, minimax(depth - 1, game, alpha, beta, !isMaximisingPlayer));
-            game.undo();
-            beta = Math.min(beta, bestMove);
-            if (beta <= alpha) {
-                return bestMove;
-            }
-        }
-        return bestMove;
-    }
-}
 
 var evaluateBoard = function(board) {
     var totalEvaluation = 0;
@@ -70,83 +21,47 @@ var reverseArray = function(array) {
     return array.slice().reverse();
 }
 
-var pawnEvalWhite = 
-    [
-        [0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0],
-        [5.0,  5.0,  5.0,  5.0,  5.0,  5.0,  5.0,  5.0],
-        [1.0,  1.0,  2.0,  3.0,  3.0,  2.0,  1.0,  1.0],
-        [0.5,  0.5,  1.0,  2.5,  2.5,  1.0,  0.5,  0.5],
-        [0.0,  0.0,  0.0,  2.0,  2.0,  0.0,  0.0,  0.0],
-        [0.5, -0.5, -1.0,  0.0,  0.0, -1.0, -0.5,  0.5],
-        [0.5,  1.0, 1.0,  -2.0, -2.0,  1.0,  1.0,  0.5],
-        [0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0]
-    ];
+// simple evaluation function, evaluating only material
+/*
+pawn    10
+knight  30
+bishop  30
+rook    50
+queen   90
+king    900
 
-var pawnEvalBlack = reverseArray(pawnEvalWhite);
+positive for white, negative for black
+*/
 
-var knightEval =
-    [
-        [-5.0, -4.0, -3.0, -3.0, -3.0, -3.0, -4.0, -5.0],
-        [-4.0, -2.0,  0.0,  0.0,  0.0,  0.0, -2.0, -4.0],
-        [-3.0,  0.0,  1.0,  1.5,  1.5,  1.0,  0.0, -3.0],
-        [-3.0,  0.5,  1.5,  2.0,  2.0,  1.5,  0.5, -3.0],
-        [-3.0,  0.0,  1.5,  2.0,  2.0,  1.5,  0.0, -3.0],
-        [-3.0,  0.5,  1.0,  1.5,  1.5,  1.0,  0.5, -3.0],
-        [-4.0, -2.0,  0.0,  0.5,  0.5,  0.0, -2.0, -4.0],
-        [-5.0, -4.0, -3.0, -3.0, -3.0, -3.0, -4.0, -5.0]
-    ];
+// returns material value of piece
+var getPieceValueSimple = function (piece) {
+    if (piece === null) {
+        return 0;
+    }
+    
+    var getAbsoluteValue = function (piece) {
+        if (piece.type === 'p') {
+            return 10;
+        } else if (piece.type === 'n') {
+            return 30;
+        } else if (piece.type === 'b') {
+            return 30;
+        } else if (piece.type === 'r') {
+            return 50;
+        } else if (piece.type === 'q') {
+            return 90;
+        } else if (piece.type === 'k') {
+            return 900;
+        }
+    }
 
-var bishopEvalWhite = [
-    [ -2.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -2.0],
-    [ -1.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0, -1.0],
-    [ -1.0,  0.0,  0.5,  1.0,  1.0,  0.5,  0.0, -1.0],
-    [ -1.0,  0.5,  0.5,  1.0,  1.0,  0.5,  0.5, -1.0],
-    [ -1.0,  0.0,  1.0,  1.0,  1.0,  1.0,  0.0, -1.0],
-    [ -1.0,  1.0,  1.0,  1.0,  1.0,  1.0,  1.0, -1.0],
-    [ -1.0,  0.5,  0.0,  0.0,  0.0,  0.0,  0.5, -1.0],
-    [ -2.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -2.0]
-];
+    
+    return piece.color === 'w' ? getAbsoluteValue() : 0
+    
+    throw "Unknown piece type: " + piece.type;
+}
 
-var bishopEvalBlack = reverseArray(bishopEvalWhite);
-
-var rookEvalWhite = [
-    [  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0],
-    [  0.5,  1.0,  1.0,  1.0,  1.0,  1.0,  1.0,  0.5],
-    [ -0.5,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0, -0.5],
-    [ -0.5,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0, -0.5],
-    [ -0.5,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0, -0.5],
-    [ -0.5,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0, -0.5],
-    [ -0.5,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0, -0.5],
-    [  0.0,   0.0, 0.0,  0.5,  0.5,  0.0,  0.0,  0.0]
-];
-
-var rookEvalBlack = reverseArray(rookEvalWhite);
-
-var evalQueen = [
-    [ -2.0, -1.0, -1.0, -0.5, -0.5, -1.0, -1.0, -2.0],
-    [ -1.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0, -1.0],
-    [ -1.0,  0.0,  0.5,  0.5,  0.5,  0.5,  0.0, -1.0],
-    [ -0.5,  0.0,  0.5,  0.5,  0.5,  0.5,  0.0, -0.5],
-    [  0.0,  0.0,  0.5,  0.5,  0.5,  0.5,  0.0, -0.5],
-    [ -1.0,  0.5,  0.5,  0.5,  0.5,  0.5,  0.0, -1.0],
-    [ -1.0,  0.0,  0.5,  0.0,  0.0,  0.0,  0.0, -1.0],
-    [ -2.0, -1.0, -1.0, -0.5, -0.5, -1.0, -1.0, -2.0]
-];
-
-var kingEvalWhite = [
-
-    [ -3.0, -4.0, -4.0, -5.0, -5.0, -4.0, -4.0, -3.0],
-    [ -3.0, -4.0, -4.0, -5.0, -5.0, -4.0, -4.0, -3.0],
-    [ -3.0, -4.0, -4.0, -5.0, -5.0, -4.0, -4.0, -3.0],
-    [ -3.0, -4.0, -4.0, -5.0, -5.0, -4.0, -4.0, -3.0],
-    [ -2.0, -3.0, -3.0, -4.0, -4.0, -3.0, -3.0, -2.0],
-    [ -1.0, -2.0, -2.0, -2.0, -2.0, -2.0, -2.0, -1.0],
-    [  2.0,  2.0,  0.0,  0.0,  0.0,  0.0,  2.0,  2.0 ],
-    [  2.0,  3.0,  1.0,  0.0,  0.0,  1.0,  3.0,  2.0 ]
-];
-
-var kingEvalBlack = reverseArray(kingEvalWhite);
-
+/*
 var getPieceValue = function(piece, x, y) {
     if (piece === null) {
         return 0;
@@ -171,9 +86,10 @@ var getPieceValue = function(piece, x, y) {
     var absoluteValue = getAbsoluteValue(piece, piece.color === 'w', x, y);
     return piece.color === 'w' ? absoluteValue : -absoluteValue;
 }
+*/
 
 // board visualization and game states handling
-var onDragStart = function(source, piece, position, orientation) {
+let onDragStart = function(source, piece, position, orientation) {
     // do not pick up pieces if game over
     if (game.game_over()) {
         return false;
@@ -186,8 +102,8 @@ var onDragStart = function(source, piece, position, orientation) {
     }
 }
 
-var makeBestMove = function() {
-    var bestMove = getBestMove(game);
+let makeBestMove = function() {
+    let bestMove = getBestMove(game);
     game.ugly_move(bestMove);
     board.position(game.fen());
     renderMoveHistory(game.history());
@@ -197,21 +113,27 @@ var makeBestMove = function() {
 }
 
 function makeRandomMove () {
-    var possibleMoves = game.moves();
+    let possibleMoves = game.moves();
   
     // game over
     if (possibleMoves.length === 0)
         return;
   
-    var randomIdx = Math.floor(Math.random() * possibleMoves.length);
+    // make random move
+    let randomIdx = Math.floor(Math.random() * possibleMoves.length);
     game.move(possibleMoves[randomIdx]);
     board.position(game.fen());
 
-    console.log("prev move: " + possibleMoves[randomIdx]);
+    // update move history
+    renderMoveHistory(game.history());
+
+    if (game.game_over()) {
+        alert("Game Over");
+    }
 }
 
-var positionCount;
-var getBestMove = function (game) {
+let positionCount;
+let getBestMove = function (game) {
     if (game.game_over()) {
         alert('Game over');
     }
@@ -231,16 +153,16 @@ var getBestMove = function (game) {
     return bestMove;
 }
 
-var renderMoveHistory = function(moves) {
+let renderMoveHistory = function(moves) {
     var historyElement = $('#move-history').empty();
     historyElement.empty();
-    for (var i = 0; i < renderMoveHistory.length; i = i + 2) {
+    for (var i = 0; i < moves.length; i = i + 2) {
         historyElement.append('<span>' + moves[i] + ' ' + (moves[i+1] ? moves[i+1] : ' ') + '</span><br>')
     }
     historyElement.scrollTop(historyElement[0].scrollHeight)
 }
 
-var onDrop = function (source, target) {
+let onDrop = function (source, target) {
     // see if the move is legal
     var move = game.move({
         from: source,
@@ -262,12 +184,13 @@ var onDrop = function (source, target) {
 
 // update the board position after the piece snap
 // for castling, en passant, pawn promotion
-var onSnapEnd = function() {
+let onSnapEnd = function() {
     board.position(game.fen());
 }
 
-var onMouseoverSquare = function(square, piece) {
-    var moves = game.moves({
+// grey possible moves when mouse over piece
+let onMouseoverSquare = function(square, piece) {
+    let moves = game.moves({
         square: square,
         verbose: true
     })
@@ -280,9 +203,9 @@ var onMouseoverSquare = function(square, piece) {
 }
 
 function updateStatus() {
-    var status = ''
+    let status = ''
 
-    var moveColor = 'White'
+    let moveColor = 'White'
     if (game.turn() === 'b') {
       moveColor = 'Black'
     }
@@ -308,18 +231,18 @@ function updateStatus() {
     $status.html(status)
 }
 
-var onMouseoutSquare = function(square, piece) {
+let onMouseoutSquare = function(square, piece) {
     removeGreySquares();
 }
 
-var removeGreySquares = function() {
+let removeGreySquares = function() {
     $('#board .square-55d63').css('background', '');
 }
 
-var greySquare = function(square) {
-    var squareEl = $('#board .square-' + square);
+function greySquare(square) {
+    let squareEl = $('#board .square-' + square);
 
-    var background = '#a9a9a9';
+    let background = '#a9a9a9';
     if (squareEl.hasClass('black-3c85d') === true) {
         background = '#696969';
     }
@@ -327,7 +250,7 @@ var greySquare = function(square) {
     squareEl.css('background', background);
 }
 
-var cfg = {
+let cfg = {
     draggable: true,
     position: 'start',
     onDragStart: onDragStart,
@@ -340,6 +263,6 @@ var cfg = {
 // var board1 = Chessboard('board', 'start');
 board = ChessBoard('board', cfg);
 
-console.log("board: " + board);
-console.log('game: ' + game);
+console.log("board: " + JSON.stringify(board));
+console.log("game: " + JSON.stringify(game));
 updateStatus();
