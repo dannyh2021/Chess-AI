@@ -1,4 +1,3 @@
-// create chess backend (or figure out how to use chess.js
 const { Chess } = require('./js/chess.js')
 
 // create new game
@@ -16,7 +15,11 @@ console.log("pgn:" + chess.pgn())
 
 // ........
 
-// create chess front end (or figure out how to use chessboard.js)
+// create simple evaluation
+
+// minimax simple evaluation
+
+// create better evaluation function
 
 // design structure of app
 

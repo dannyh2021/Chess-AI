@@ -7,14 +7,61 @@ var game = new Chess();
 var $status = $('#status')
 
 
-var evaluateBoard = function(board) {
-    var totalEvaluation = 0;
-    for (var i = 0; i < 8; i++) {
-        for (var j = 0; j < 8; j++) {
-            totalEvaluation = totalEvaluation + getPieceValue(board[i][j], i, j);
+let minimaxRoot = function(depth, game, isMaximizingPlayer) {
+    let newGameMoves = game.ugly_moves();
+    let bestMove = isMaximizingPlayer ? -9999 : 9999;
+    let bestMoveFound;
+
+    for (let i = 0; i < newGameMoves.length; i++) {
+        let newGameMove = newGameMoves[i];
+        game.ugly_move(newGameMove);
+        var value = minimax(depth - 1, game, -9999, 9999, !isMaximizingPlayer)
+        console.log("root value: " + value);
+        game.undo();
+        if ((value >= bestMove && isMaximizingPlayer) ||
+            (value <= bestMove && !isMaximizingPlayer)) {
+            bestMove = value;
+            bestMoveFound = newGameMove;
         }
     }
-    return totalEvaluation;
+    console.log("value of move returned: " + bestMove)
+    return bestMoveFound
+}
+
+let minimax = function (depth, game, alpha, beta, isMaximizingPlayer) {
+    positionCount++;
+    // console.log("depth: " + depth + " alpha: " + alpha + " beta: " + beta);
+    if (depth === 0) {
+        return evaluateBoard(game.board());
+    }
+
+    let newGameMoves = game.ugly_moves();
+
+    if (isMaximizingPlayer) {
+        let bestMove = -9999;
+        for (let i = 0; i < newGameMoves.length; i++) {
+            game.ugly_move(newGameMoves[i]);
+            bestMove = Math.max(bestMove, minimax(depth - 1, game, alpha, beta, !isMaximizingPlayer));
+            game.undo();
+            alpha = Math.max(alpha, bestMove);
+            if (beta <= alpha) {
+                return bestMove;
+            }
+        }
+        return bestMove;
+    } else {
+        var bestMove = 9999;
+        for (var i = 0; i < newGameMoves.length; i++) {
+            game.ugly_move(newGameMoves[i]);
+            bestMove = Math.min(bestMove, minimax(depth - 1, game, alpha, beta, !isMaximizingPlayer));
+            game.undo();
+            beta = Math.min(beta, bestMove);
+            if (beta <= alpha) {
+                return bestMove;
+            }
+        }
+        return bestMove;
+    }
 }
 
 var reverseArray = function(array) {
@@ -33,13 +80,23 @@ king    900
 positive for white, negative for black
 */
 
+let evaluateBoard = function(board) {
+    let totalEvaluation = 0;
+    for (let i = 0; i < 8; i++) {
+        for (let j = 0; j < 8; j++) {
+            totalEvaluation = totalEvaluation + getPieceValueSimple(board[i][j]);
+        }
+    }
+    return totalEvaluation;
+}
+
 // returns material value of piece
-var getPieceValueSimple = function (piece) {
+let getPieceValueSimple = function (piece) {
     if (piece === null) {
         return 0;
     }
     
-    var getAbsoluteValue = function (piece) {
+    let getAbsoluteValue = function (piece) {
         if (piece.type === 'p') {
             return 10;
         } else if (piece.type === 'n') {
@@ -53,12 +110,10 @@ var getPieceValueSimple = function (piece) {
         } else if (piece.type === 'k') {
             return 900;
         }
+        throw "Unknown piece type: " + piece.type;
     }
-
     
-    return piece.color === 'w' ? getAbsoluteValue() : 0
-    
-    throw "Unknown piece type: " + piece.type;
+    return piece.color === 'w' ? getAbsoluteValue(piece) : -getAbsoluteValue(piece);
 }
 
 /*
@@ -107,6 +162,7 @@ let makeBestMove = function() {
     game.ugly_move(bestMove);
     board.position(game.fen());
     renderMoveHistory(game.history());
+    updateStatus();
     if (game.game_over()) {
         alert('Game over');
     }
@@ -139,13 +195,14 @@ let getBestMove = function (game) {
     }
 
     positionCount = 0;
-    var depth = parseInt($('#search-depth').find(':selected').text());
+    let depth = parseInt($('#search-depth').find(':selected').text());
+    let isMaximizingPlayer = game.turn() === 'w';
 
-    var d = new Date().getTime();
-    var bestMove = minimaxRoot(depth, game, true);
-    var d2 = Date().getTime();
-    var moveTime = (d2 - d);
-    var PositionsPerS = (positionCount * 1000 / moveTime);
+    let d = new Date().getTime();
+    let bestMove = minimaxRoot(depth, game, isMaximizingPlayer);
+    let d2 = new Date().getTime();
+    let moveTime = (d2 - d);
+    let positionsPerS = (positionCount * 1000 / moveTime);
 
     $('#position-count').text(positionCount);
     $('#time').text(moveTime/1000 + 's');
@@ -178,7 +235,7 @@ let onDrop = function (source, target) {
 
     renderMoveHistory(game.history());
     updateStatus();
-    window.setTimeout(makeRandomMove, 250);
+    window.setTimeout(makeBestMove, 250);
     // window.setTimeout(makeBestMove, 250);
 }
 
@@ -202,6 +259,7 @@ let onMouseoverSquare = function(square, piece) {
     }
 }
 
+// update current status
 function updateStatus() {
     let status = ''
 
@@ -229,6 +287,7 @@ function updateStatus() {
     }
   
     $status.html(status)
+    console.log("current evaluation: " + evaluateBoard(game.board()));
 }
 
 let onMouseoutSquare = function(square, piece) {
