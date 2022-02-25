@@ -12,8 +12,10 @@ var game = new Chess();
 var $status = $('#status')
 
 // Minimax algorithm for selecting best move
+let movesConsidered;
 let minimaxRoot = function(depth, game, isMaximizingPlayer) {
     let newGameMoves = game.ugly_moves();
+    movesConsidered = [];
     let bestMove = isMaximizingPlayer ? -9999 : 9999;
     let bestMoveFound;
 
@@ -21,7 +23,8 @@ let minimaxRoot = function(depth, game, isMaximizingPlayer) {
         let newGameMove = newGameMoves[i];
         game.ugly_move(newGameMove);
         var value = minimax(depth - 1, game, -9999, 9999, !isMaximizingPlayer)
-        console.log("root value: " + value);
+        movesConsidered.push({'move': newGameMove, 'value': value});
+        // console.log("move: " + JSON.stringify(movesConsidered[i].move) + " " + "value: " + movesConsidered[i].value);
         game.undo();
         if ((value >= bestMove && isMaximizingPlayer) ||
             (value <= bestMove && !isMaximizingPlayer)) {
@@ -134,17 +137,17 @@ let getPieceValue = function(piece, x, y) {
     }
     let getAbsoluteValue = function(piece, isWhite, x, y) {
         if (piece.type === 'p') {
-            return 10 + (isWhite ? weights.pawnEvalWhite[y][x] : weights.pawnEvalBlack[y][x]);
+            return 10 + (isWhite ? weights.pawnEvalWhite[x][y] : weights.pawnEvalBlack[x][y]);
         } else if (piece.type === 'r') {
-            return 50 + (isWhite ? weights.rookEvalWhite[y][x] : weights.rookEvalBlack[y][x]);
+            return 50 + (isWhite ? weights.rookEvalWhite[x][y] : weights.rookEvalBlack[x][y]);
         } else if (piece.type === 'n') {
-            return 30 + weights.knightEval[y][x];
+            return 30 + weights.knightEval[x][y];
         } else if (piece.type === 'b') {
-            return 30 + (isWhite ? weights.bishopEvalWhite[y][x] : weights.bishopEvalBlack[y][x]);
+            return 30 + (isWhite ? weights.bishopEvalWhite[x][y] : weights.bishopEvalBlack[x][y]);
         } else if (piece.type === 'q') {
-            return 90 + weights.evalQueen[y][x];
+            return 90 + weights.evalQueen[x][y];
         } else if (piece.type === 'k') {
-            return 900 + (isWhite ? weights.kingEvalWhite[y][x] : weights.kingEvalBlack[y][x]);
+            return 900 + (isWhite ? weights.kingEvalWhite[x][y] : weights.kingEvalBlack[x][y]);
         }
         throw "Unknown piece type: " + piece.type;
     };
@@ -172,6 +175,7 @@ let makeBestMove = function() {
     game.ugly_move(bestMove);
     board.position(game.fen());
     renderMoveHistory(game.history());
+    renderMovesConsidered();
     updateStatus();
     if (game.game_over()) {
         alert('Game over');
@@ -222,12 +226,46 @@ let getBestMove = function (game) {
 }
 
 let renderMoveHistory = function(moves) {
-    var historyElement = $('#move-history').empty();
+    let historyElement = $('#move-history').empty();
     historyElement.empty();
-    for (var i = 0; i < moves.length; i = i + 2) {
+    for (let i = 0; i < moves.length; i = i + 2) {
         historyElement.append('<span>' + moves[i] + ' ' + (moves[i+1] ? moves[i+1] : ' ') + '</span><br>')
     }
     historyElement.scrollTop(historyElement[0].scrollHeight)
+}
+
+let renderMovesConsidered = function() {
+    movesConsidered.sort((a, b) => {
+        return a.value - b.value;
+    }).reverse()
+    let movesElement = $('#moves-considered').empty();
+    for (let i = 0; i < movesConsidered.length; i++) {
+        movesElement.append('<span>' + JSON.stringify(movesConsidered[i].move) + ' ' + movesConsidered[i].value
+                            + '</span><br>');
+    }
+    // movesElement.scrollTop(movesElement[0].scrollHeight);
+}
+
+// set buttons
+let restartButton = document.getElementById('restart-button')
+let undoButton = document.getElementById('undo-button');
+
+restartButton.onclick = function (){
+    game.reset();
+    updateStatus();
+    board.position(game.fen());
+    renderMoveHistory(game.history());
+    renderMovesConsidered();
+    console.log('game reset.');
+};
+
+undoButton.onclick = function () {
+    game.undo();
+    game.undo();
+    updateStatus();
+    board.position(game.fen());
+    renderMoveHistory(game.history());
+    renderMovesConsidered();
 }
 
 let onDrop = function (source, target) {
