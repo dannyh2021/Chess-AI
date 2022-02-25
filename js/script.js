@@ -1,12 +1,17 @@
 // notes
 // board - array of length-8 arrays each containing 8 piece = {"type", "color"} objects or null
 
+// imports
+import * as weights from '/js/evaluation_weights.js';
+
+console.log("test: " + weights.pawnEvalBlack);
+
 // board defaults to the starting position when called with no parameters
 var board;
 var game = new Chess();
 var $status = $('#status')
 
-
+// Minimax algorithm for selecting best move
 let minimaxRoot = function(depth, game, isMaximizingPlayer) {
     let newGameMoves = game.ugly_moves();
     let bestMove = isMaximizingPlayer ? -9999 : 9999;
@@ -31,6 +36,16 @@ let minimaxRoot = function(depth, game, isMaximizingPlayer) {
 let minimax = function (depth, game, alpha, beta, isMaximizingPlayer) {
     positionCount++;
     // console.log("depth: " + depth + " alpha: " + alpha + " beta: " + beta);
+
+    if(game.game_over()) {
+        if (game.in_draw()) {
+            return 0;
+        } else if (game.in_checkmate){
+            return game.turn() === 'b' ? 9000 : -9000;
+        }
+        throw "Error: unknown game state";
+    }
+
     if (depth === 0) {
         return evaluateBoard(game.board());
     }
@@ -64,12 +79,7 @@ let minimax = function (depth, game, alpha, beta, isMaximizingPlayer) {
     }
 }
 
-var reverseArray = function(array) {
-    return array.slice().reverse();
-}
-
-// simple evaluation function, evaluating only material
-/*
+/* simple evaluation function, evaluating only material
 pawn    10
 knight  30
 bishop  30
@@ -78,20 +88,22 @@ queen   90
 king    900
 
 positive for white, negative for black
+
+==> changed to better evaluation that takes into account position of the piece as well.
 */
 
 let evaluateBoard = function(board) {
     let totalEvaluation = 0;
     for (let i = 0; i < 8; i++) {
         for (let j = 0; j < 8; j++) {
-            totalEvaluation = totalEvaluation + getPieceValueSimple(board[i][j]);
+            totalEvaluation = totalEvaluation + getPieceValue(board[i][j], i, j);
         }
     }
     return totalEvaluation;
 }
 
 // returns material value of piece
-let getPieceValueSimple = function (piece) {
+/*let getPieceValueSimple = function (piece) {
     if (piece === null) {
         return 0;
     }
@@ -114,26 +126,25 @@ let getPieceValueSimple = function (piece) {
     }
     
     return piece.color === 'w' ? getAbsoluteValue(piece) : -getAbsoluteValue(piece);
-}
+}*/
 
-/*
-var getPieceValue = function(piece, x, y) {
+let getPieceValue = function(piece, x, y) {
     if (piece === null) {
         return 0;
     }
-    var getAbsoluteValue = function(piece, isWhite, x, y) {
+    let getAbsoluteValue = function(piece, isWhite, x, y) {
         if (piece.type === 'p') {
-            return 10 + (isWhite ? pawnEvalWhite[y][x] : pawnEvalBlack[y][x]);
+            return 10 + (isWhite ? weights.pawnEvalWhite[y][x] : weights.pawnEvalBlack[y][x]);
         } else if (piece.type === 'r') {
-            return 50 + (isWhite ? rookEvalWhite[y][x] : rookEvalBlack[y][x]);
+            return 50 + (isWhite ? weights.rookEvalWhite[y][x] : weights.rookEvalBlack[y][x]);
         } else if (piece.type === 'n') {
-            return 30 + knightEval[y][x];
+            return 30 + weights.knightEval[y][x];
         } else if (piece.type === 'b') {
-            return 30 + (isWhite ? bishopEvalWhite[y][x] : bishopEvalBlack[y][x]);
+            return 30 + (isWhite ? weights.bishopEvalWhite[y][x] : weights.bishopEvalBlack[y][x]);
         } else if (piece.type === 'q') {
-            return 90 + evalQueen[y][x];
+            return 90 + weights.evalQueen[y][x];
         } else if (piece.type === 'k') {
-            return 900 + (isWhite ? kingEvalWhite[y][x] : kingEvalBlack[y][x]);
+            return 900 + (isWhite ? weights.kingEvalWhite[y][x] : weights.kingEvalBlack[y][x]);
         }
         throw "Unknown piece type: " + piece.type;
     };
@@ -141,7 +152,6 @@ var getPieceValue = function(piece, x, y) {
     var absoluteValue = getAbsoluteValue(piece, piece.color === 'w', x, y);
     return piece.color === 'w' ? absoluteValue : -absoluteValue;
 }
-*/
 
 // board visualization and game states handling
 let onDragStart = function(source, piece, position, orientation) {
@@ -168,6 +178,7 @@ let makeBestMove = function() {
     }
 }
 
+/*
 function makeRandomMove () {
     let possibleMoves = game.moves();
   
@@ -186,7 +197,7 @@ function makeRandomMove () {
     if (game.game_over()) {
         alert("Game Over");
     }
-}
+}*/
 
 let positionCount;
 let getBestMove = function (game) {
@@ -236,7 +247,6 @@ let onDrop = function (source, target) {
     renderMoveHistory(game.history());
     updateStatus();
     window.setTimeout(makeBestMove, 250);
-    // window.setTimeout(makeBestMove, 250);
 }
 
 // update the board position after the piece snap

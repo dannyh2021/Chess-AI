@@ -21,6 +21,10 @@ app.get('/css/chessboard-1.0.0.css', (req, res) => {
     res.sendFile(path.resolve(__dirname, './css/chessboard-1.0.0.css'));
 });
 
+app.get('/css/style.css', (req, res) => {
+    res.sendFile(path.resolve(__dirname, './css/style.css'));
+})
+
 // pictures
 const pieces = ['bB', 'bK', 'bN', 'bP', 'bQ', 'bR', 'wB', 'wK', 'wN', 'wP', 'wQ', 'wR'];
 
@@ -42,6 +46,10 @@ app.get('/js/chessboard-1.0.0.js', (req, res) => {
 app.get('/js/chess.js', (req, res) => {
     res.sendFile(path.resolve(__dirname, './js/chess.js'))
 });
+
+app.get('/js/evaluation_weights.js', (req, res) => {
+    res.sendFile(path.resolve(__dirname, './js/evaluation_weights.js'));
+})
 
 // send 404 not found page
 /*app.use((req, res) => {

@@ -3,38 +3,57 @@
     <head>
         <meta charset="utf-8">
         <link rel="stylesheet" href="css/chessboard-1.0.0.css">
+        <link rel="stylesheet" href="./css/style.css">
     </head>
     <body>
-        <h1> Chess AI </h1>
-        <div id="board" class="board" style="width: 400px">board</div>
-        <div class="info">
-            <span>Status: <span id="status"></span></span>
-            <br>
+        <center>
+            <h1> Chess AI </h1>
+            <div class="horizontal-container">
+                <div class="left-box">
+                    <div id="board" class="board" style="width: 400px">board</div>
+        
+                    <div class="info">
+                        <span>Status: <span id="status"></span></span>
+                        <br>
+                        <span>
+                            <button id="restart-button">Restart</button>
+                            <button id="undo-button">Undo</button>
+                        </span>
+                        <br>
+            
+                        Search depth:
+                        <select id="search-depth">
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3" selected>3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                        </select>
+                        <br>
+            
+                        <span>Positions evaluated: <span id="position-count"></span></span>
+                        <br>
+                        <span>Time: <span id="time"></span></span>
+                        <br>
+                        <span>Positions/s: <span id="positions-per-s"></span></span>
+                        <br>
+                        <div id="move-history" class="move-history"></div>
+                    </div>
+                </div>
 
-            Search depth:
-            <select id="search-depth">
-                <option value="1">1</option>
-                <option value="2">2</option>
-                <option value="3" selected>3</option>
-                <option value="4">4</option>
-                <option value="5">5</option>
-            </select>
-            <br>
-
-            <span>Positions evaluated: <span id="position-count"></span></span>
-            <br>
-            <span>Time: <span id="time"></span></span>
-            <br>
-            <span>Positions/s: <span id="positions-per-s"></span></span>
-            <br>
-            <br>
-            <div id="move-history" class="move-history"></div>
-        </div>
+                <!-- right -->
+                <div class="right-box">
+                    <p>Moves Considered:</p>
+                    <div id="moves-considered"></div>
+                </div>
+            </div>
+        
+        </center>
 
         <!-- Scripts -->
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
         <script src="js/chess.js"></script>
         <script src="js/chessboard-1.0.0.js"></script>
-        <script src="js/script.js"></script>
+        <script src="js/script.js" type="module"></script>
     </body>
 </html>
